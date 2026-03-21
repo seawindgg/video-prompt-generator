@@ -10,10 +10,12 @@ export default function Home() {
   const [selections, setSelections] = useState<Record<VariableKey, { selected: string; custom: string }>>({
     scene: { selected: "", custom: "" },
     subject: { selected: "", custom: "" },
-    action: { selected: "", custom: "" },
+    armor: { selected: "", custom: "" },
+    event: { selected: "", custom: "" },
     camera: { selected: "", custom: "" },
     lighting: { selected: "", custom: "" },
-    style: { selected: "", custom: "" },
+    duration: { selected: "", custom: "" },
+    timeline: { selected: "", custom: "" },
     quality: { selected: "", custom: "" },
   });
 
@@ -25,23 +27,33 @@ export default function Home() {
 
   // 实时生成 Prompt
   useEffect(() => {
+    // 获取每层的值（自定义优先，否则用选择的）
     const values: Record<string, string> = {};
     
     (Object.keys(template.variables) as VariableKey[]).forEach((key) => {
       const selection = selections[key];
-      // 如果有自定义输入则用自定义，否则用选择的
-      values[key] = selection.custom || selection.selected || `{${key}}`;
+      if (selection.custom) {
+        values[key] = selection.custom;
+      } else if (selection.selected) {
+        const option = template.variables[key].options.find(o => o.name === selection.selected);
+        values[key] = option?.content || "";
+      } else {
+        // 默认使用 placeholder
+        values[key] = template.variables[key].placeholder || "";
+      }
     });
 
-    // 根据模板结构拼接
-    const prompt = template.structure
-      .replace(/{scene}/g, values.scene)
-      .replace(/{subject}/g, values.subject)
-      .replace(/{action}/g, values.action)
-      .replace(/{camera}/g, values.camera)
-      .replace(/{lighting}/g, values.lighting)
-      .replace(/{style}/g, values.style)
-      .replace(/{quality}/g, values.quality);
+    // 基于原始模板替换占位符
+    let prompt = template.rawTemplate;
+    prompt = prompt.replace(/{scene}/g, values.scene);
+    prompt = prompt.replace(/{subject}/g, values.subject);
+    prompt = prompt.replace(/{armor}/g, values.armor);
+    prompt = prompt.replace(/{event}/g, values.event);
+    prompt = prompt.replace(/{camera}/g, values.camera);
+    prompt = prompt.replace(/{lighting}/g, values.lighting);
+    prompt = prompt.replace(/{duration}/g, values.duration);
+    prompt = prompt.replace(/{timeline}/g, values.timeline);
+    prompt = prompt.replace(/{quality}/g, values.quality);
 
     setGeneratedPrompt(prompt);
   }, [selections]);
@@ -70,7 +82,7 @@ export default function Home() {
       const option = template.variables[key].options.find(o => o.name === selection.selected);
       return option?.content || selection.selected;
     }
-    return `请选择${template.variables[key].label}`;
+    return template.variables[key].placeholder || `请选择${template.variables[key].label}`;
   };
 
   // 复制 Prompt
@@ -122,7 +134,7 @@ export default function Home() {
                 📋 选择变量
               </h2>
               
-              {/* 7 层变量表单 */}
+              {/* 9 层变量表单 */}
               <div className="space-y-6">
                 {(Object.keys(template.variables) as VariableKey[]).map((key, index) => {
                   const variable = template.variables[key];
@@ -142,7 +154,7 @@ export default function Home() {
                         onChange={(e) => handleSelectChange(key, e.target.value)}
                         className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                       >
-                        <option value="">请选择{variable.label}</option>
+                        <option value="">使用默认值</option>
                         {variable.options.map((option) => (
                           <option key={option.name} value={option.name}>
                             {option.name}
@@ -151,27 +163,17 @@ export default function Home() {
                       </select>
                       
                       {/* 自定义输入 */}
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={selection.custom}
-                          onChange={(e) => handleCustomChange(key, e.target.value)}
-                          placeholder="或输入自定义内容..."
-                          className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        />
-                        {selection.custom && (
-                          <button
-                            onClick={() => handleCustomChange(key, "")}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
+                      <textarea
+                        value={selection.custom}
+                        onChange={(e) => handleCustomChange(key, e.target.value)}
+                        placeholder={selection.custom ? "" : `或自定义${variable.label}...`}
+                        rows={selection.custom ? 3 : 1}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+                      />
                       
                       {/* 当前值预览 */}
-                      {getVariableValue(key) && !getVariableValue(key).startsWith(`请选择`) && (
-                        <p className="text-xs text-purple-400 mt-1 line-clamp-1">
+                      {getVariableValue(key) && (
+                        <p className="text-xs text-purple-400 mt-1 line-clamp-2">
                           → {getVariableValue(key)}
                         </p>
                       )}
@@ -190,8 +192,8 @@ export default function Home() {
               </h2>
               
               {/* 生成的 Prompt */}
-              <div className="bg-slate-900/80 rounded-lg p-4 mb-4">
-                <p className="text-gray-100 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-slate-900/80 rounded-lg p-4 mb-4 max-h-[600px] overflow-y-auto">
+                <p className="text-gray-100 leading-relaxed whitespace-pre-wrap font-mono text-sm">
                   {generatedPrompt || "请选择变量以生成 Prompt..."}
                 </p>
               </div>
@@ -225,7 +227,8 @@ export default function Home() {
                 <ul className="space-y-2 text-sm text-gray-500">
                   <li>• 每层变量可选择预设或自定义输入</li>
                   <li>• 自定义输入会覆盖选择的内容</li>
-                  <li>• 所有变量选择后自动生成完整 Prompt</li>
+                  <li>• 不选择则使用默认值（原版 Prompt）</li>
+                  <li>• 所有变量自动替换到完整模板中</li>
                   <li>• 点击复制按钮即可使用</li>
                 </ul>
               </div>
