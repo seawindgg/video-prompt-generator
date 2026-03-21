@@ -1,2 +1,43 @@
-# video-prompt-generator
-video-prompt-generator
+# 🎬 视频 Prompt 生成器
+
+基于模板的可视化视频 Prompt 生成工具
+
+## ✨ 功能特点
+
+- 🎯 7 层变量结构（场景、主体、动作、镜头、灯光、风格、质量）
+- 📋 下拉选择 + 自定义输入
+- ⚡ 实时预览生成的 Prompt
+- 📋 一键复制
+- 📱 响应式设计，支持移动端
+
+## 🚀 在线使用
+
+访问：https://video-prompt-generator.vercel.app
+
+## 🛠️ 本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 构建生产版本
+npm run build
+```
+
+## 📊 模板数据
+
+内置「校园怪兽铠甲变身模板」，包含：
+- 场景：10 个选项
+- 主体：8 个选项
+- 动作：7 个选项
+- 镜头：7 个选项
+- 灯光：7 个选项
+- 风格：7 个选项
+- 质量：6 个选项
+
+## 📝 License
+
+MIT
