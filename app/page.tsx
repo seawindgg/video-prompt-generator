@@ -98,6 +98,24 @@ export default function Home() {
       }
     });
 
+    // 特殊处理：台词变量替换（dialogue_crowd 和 dialogue_hero）
+    // 因为台词是硬编码在 timeline 中的，需要单独替换
+    const dialogueReplacements = [
+      { var: 'dialogue_crowd', default: '快走啊威威，这个时候你装什么啊' },
+      { var: 'dialogue_hero', default: '下课' },
+    ];
+    
+    dialogueReplacements.forEach(({ var: dialogueVar, default: defaultDialogue }) => {
+      if (modifiedVars[dialogueVar]) {
+        const { new: newDialogue } = modifiedVars[dialogueVar];
+        // 替换默认台词为新台词
+        const regex = new RegExp(defaultDialogue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        if (prompt.match(regex)) {
+          prompt = prompt.replace(regex, newDialogue);
+        }
+      }
+    });
+
     // 高亮颜色映射
     const highlightColors: Record<string, string> = {
       'protagonist_name': 'bg-green-500/50',    // 主角名称 - 绿色
