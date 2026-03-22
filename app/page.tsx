@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { templates } from "@/data/template";
 
 type Template = typeof templates[0];
@@ -13,8 +13,11 @@ export default function Home() {
   // 存储每层变量的选择（支持自定义）
   const [selections, setSelections] = useState<Record<VariableKey, { selected: string; custom: string }>>({});
 
-  // 生成的完整 Prompt
+  // 生成的完整 Prompt（纯文本）
   const [generatedPrompt, setGeneratedPrompt] = useState("");
+
+  // 带高亮的 Prompt（HTML）
+  const [highlightedPrompt, setHighlightedPrompt] = useState("");
 
   // 复制成功提示
   const [copied, setCopied] = useState(false);
@@ -28,18 +31,21 @@ export default function Home() {
     setSelections(initial);
   }, [selectedTemplate]);
 
-  // 实时生成 Prompt
-  useEffect(() => {
+  // 智能全局替换 + 高亮
+  const generatePromptWithHighlight = useCallback(() => {
     // 获取每层的值（自定义优先，否则用选择的，最后用默认值）
     const values: Record<string, string> = {};
+    const modifiedVars: string[] = []; // 记录哪些变量被修改了
     
     Object.entries(selectedTemplate.variables).forEach(([key, variable]) => {
       const selection = selections[key] || { selected: "", custom: "" };
       if (selection.custom) {
         values[key] = selection.custom;
+        modifiedVars.push(key);
       } else if (selection.selected) {
         const option = variable.options.find(o => o.name === selection.selected);
         values[key] = option?.content || variable.default;
+        if (option) modifiedVars.push(key);
       } else {
         values[key] = variable.default;
       }
@@ -52,20 +58,68 @@ export default function Home() {
       prompt = prompt.replace(regex, value);
     });
 
-    // 智能同义词替换
-    if (selectedTemplate.synonyms) {
-      Object.entries(selectedTemplate.synonyms).forEach(([mainWord, synonyms]) => {
-        // 如果用户自定义了主角，替换所有相关代词
-        if (values.protagonist && values.protagonist !== selectedTemplate.variables.protagonist?.default) {
-          // 提取新主角的关键词（如"男人"）
-          const newProtagonist = values.protagonist;
-          // 这里可以添加更智能的替换逻辑
+    // 智能同义词全局替换
+    if (selectedTemplate.synonymRules) {
+      Object.entries(selectedTemplate.synonymRules).forEach(([varKey, rule]) => {
+        const isModified = modifiedVars.includes(varKey);
+        if (isModified && varKey === 'protagonist') {
+          // 提取新主角的关键词
+          const newProtagonist = values[varKey];
+          // 从新主角描述中提取核心词（如"赛车手"）
+          const match = newProtagonist.match(/^(.+?)，/);
+          const coreWord = match ? match[1] : newProtagonist.split('，')[0];
+          
+          // 替换原文中的"男生"
+          if (coreWord && coreWord !== '男生') {
+            prompt = prompt.replace(/男生/g, coreWord);
+          }
+        }
+        if (isModified && varKey === 'crowd') {
+          const newCrowd = values[varKey];
+          const match = newCrowd.match(/^(?:惊慌 | 奔逃 | 惊恐 | 严阵以待 | 紧急避险) 的 (.+?)$/);
+          const coreWord = match ? match[1] : newCrowd;
+          if (coreWord && coreWord !== '学生') {
+            prompt = prompt.replace(/学生/g, coreWord);
+          }
+        }
+        if (isModified && varKey === 'monster') {
+          const newMonster = values[varKey];
+          const match = newMonster.match(/一头 (?:三层楼高的)?(.+?) 正在/);
+          const coreWord = match ? match[1] : newMonster.split(' ')[0];
+          if (coreWord && coreWord !== '骷髅魔') {
+            prompt = prompt.replace(/骷髅魔/g, coreWord);
+          }
         }
       });
     }
 
     setGeneratedPrompt(prompt);
+
+    // 生成带高亮的 HTML
+    let highlighted = prompt;
+    
+    // 高亮被修改的变量内容
+    modifiedVars.forEach((varKey) => {
+      const varValue = values[varKey];
+      if (varValue) {
+        // 转义 HTML 特殊字符
+        const escapedValue = varValue
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        
+        // 创建高亮正则（全局替换）
+        const regex = new RegExp(`(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
+        highlighted = highlighted.replace(regex, '<mark class="bg-yellow-500/50 text-white px-0.5 rounded">$1</mark>');
+      }
+    });
+
+    setHighlightedPrompt(highlighted);
   }, [selections, selectedTemplate]);
+
+  useEffect(() => {
+    generatePromptWithHighlight();
+  }, [generatePromptWithHighlight]);
 
   // 处理选择变化
   const handleSelectChange = (key: VariableKey, value: string) => {
@@ -96,6 +150,21 @@ export default function Home() {
     return variable.default;
   };
 
+  // 检查变量是否被修改
+  const isVariableModified = (key: VariableKey) => {
+    const selection = selections[key];
+    return !!(selection && (selection.custom || selection.selected));
+  };
+
+  // 一键恢复默认
+  const handleReset = () => {
+    const initial: Record<VariableKey, { selected: string; custom: string }> = {};
+    Object.keys(selectedTemplate.variables).forEach((key) => {
+      initial[key] = { selected: "", custom: "" };
+    });
+    setSelections(initial);
+  };
+
   // 复制 Prompt
   const handleCopy = async () => {
     try {
@@ -106,6 +175,11 @@ export default function Home() {
       console.error("复制失败:", err);
     }
   };
+
+  // 统计修改数量
+  const modifiedCount = Object.entries(selections).filter(
+    ([, selection]) => selection.custom || selection.selected
+  ).length;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900">
@@ -166,13 +240,18 @@ export default function Home() {
                 <h2 className="text-xl font-semibold text-white">
                   📋 变量配置
                 </h2>
-                <div className="flex gap-2 text-xs">
-                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
-                    基础变量：{Object.values(selectedTemplate.variables).filter(v => v.type === 'base').length}个
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">
+                    已修改：{modifiedCount}/{Object.keys(selectedTemplate.variables).length}
                   </span>
-                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">
-                    特有变量：{Object.values(selectedTemplate.variables).filter(v => v.type === 'custom').length}个
-                  </span>
+                  {modifiedCount > 0 && (
+                    <button
+                      onClick={handleReset}
+                      className="text-xs px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-all flex items-center gap-1"
+                    >
+                      🔄 恢复默认
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -181,15 +260,21 @@ export default function Home() {
                 {Object.entries(selectedTemplate.variables).map(([key, variable], index) => {
                   const selection = selections[key] || { selected: "", custom: "" };
                   const isBase = variable.type === 'base';
+                  const isModified = isVariableModified(key);
                   
                   return (
-                    <div key={key} className="space-y-2">
+                    <div key={key} className={`space-y-2 p-3 rounded-lg transition-all ${isModified ? 'bg-purple-500/10 border border-purple-500/30' : ''}`}>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
                         <span className="text-xl">{variable.icon}</span>
                         <span>{index + 1}. {variable.label}</span>
                         <span className={`text-xs px-2 py-0.5 rounded ${isBase ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
                           {isBase ? '基础' : '特有'}
                         </span>
+                        {isModified && (
+                          <span className="text-xs px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">
+                            ✏️ 已修改
+                          </span>
+                        )}
                         <span className="text-xs text-gray-500 ml-auto">({key})</span>
                       </label>
                       
@@ -234,16 +319,22 @@ export default function Home() {
           {/* 右侧：实时预览 */}
           <div className="space-y-6">
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6 sticky top-24">
-              <h2 className="text-xl font-semibold text-white mb-4">
-                ✨ 实时预览
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-white">
+                  ✨ 实时预览
+                </h2>
+                {modifiedCount > 0 && (
+                  <span className="text-xs text-yellow-400">
+                    🔍 黄色高亮 = 已修改内容
+                  </span>
+                )}
+              </div>
               
               {/* 生成的 Prompt */}
-              <div className="bg-slate-900/80 rounded-lg p-4 mb-4 max-h-[600px] overflow-y-auto">
-                <p className="text-gray-100 leading-relaxed whitespace-pre-wrap font-mono text-sm">
-                  {generatedPrompt || "请选择变量以生成 Prompt..."}
-                </p>
-              </div>
+              <div 
+                className="bg-slate-900/80 rounded-lg p-4 mb-4 max-h-[600px] overflow-y-auto"
+                dangerouslySetInnerHTML={{ __html: highlightedPrompt.replace(/\n/g, '<br/>') || '<span class="text-gray-500">请选择变量以生成 Prompt...</span>' }}
+              />
               
               {/* 操作按钮 */}
               <div className="flex gap-3">
@@ -275,8 +366,8 @@ export default function Home() {
                   <li>• 每层变量可选择预设或自定义输入</li>
                   <li>• 自定义输入会覆盖选择的内容</li>
                   <li>• 不选择则使用默认值（原版 Prompt）</li>
-                  <li>• 所有变量自动替换到完整模板中</li>
-                  <li>• 点击复制按钮即可使用</li>
+                  <li>• <span className="text-yellow-400">黄色高亮</span>显示已修改的内容</li>
+                  <li>• 点击"恢复默认"一键重置所有变量</li>
                 </ul>
               </div>
               
