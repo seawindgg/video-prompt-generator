@@ -95,7 +95,6 @@ export default function Home() {
             const regex = new RegExp(oldWord, 'g');
             if (prompt.match(regex)) {
               prompt = prompt.replace(regex, coreNewWord);
-              allReplacements.push({ word: coreNewWord, color: 'bg-green-500/50', type: nameVar });
             }
           });
         }
@@ -168,7 +167,7 @@ export default function Home() {
     Object.entries(modifiedVars).forEach(([key, { old: oldVal, new: newVal }]) => {
       const color = highlightColors[key] || 'bg-yellow-500/50';
       
-      // 对于 name 类变量，高亮核心词
+      // 对于 name 类变量，高亮核心词（使用模板定义的颜色）
       if (nameVars.includes(key)) {
         const coreWord = newVal.split(/[，,]/)[0].trim().substring(0, 10);
         const escapedValue = coreWord
