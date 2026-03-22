@@ -58,6 +58,35 @@ export default function Home() {
       prompt = prompt.replace(regex, value);
     });
 
+    // 智能全文替换：当 name 类变量被修改时，在全文中替换
+    // 但排除 desc 类变量的内容（避免重复替换）
+    const nameToDescMap: Record<string, string> = {
+      'protagonist_name': 'protagonist_desc',
+      'monster_name': 'monster_desc',
+      'crowd_name': 'crowd_desc',
+    };
+    
+    Object.entries(nameToDescMap).forEach(([nameVar, descVar]) => {
+      const isNameModified = modifiedVars.includes(nameVar);
+      const isDescModified = modifiedVars.includes(descVar);
+      
+      if (isNameModified) {
+        const newName = values[nameVar];
+        const oldName = selectedTemplate.variables[nameVar as keyof typeof selectedTemplate.variables].default;
+        const descValue = values[descVar];
+        
+        // 如果名称被修改，且描述没有被修改，则在全文中替换（排除描述部分）
+        if (oldName && newName !== oldName) {
+          // 先从 prompt 中临时移除描述内容
+          const tempPrompt = prompt.replace(descValue, '___DESC_PLACEHOLDER___');
+          // 替换名称
+          const replacedPrompt = tempPrompt.replace(new RegExp(oldName, 'g'), newName);
+          // 恢复描述内容
+          prompt = replacedPrompt.replace('___DESC_PLACEHOLDER___', descValue);
+        }
+      }
+    });
+
     setGeneratedPrompt(prompt);
 
     // 生成带高亮的 HTML
