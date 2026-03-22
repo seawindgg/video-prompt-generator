@@ -58,19 +58,20 @@ export default function Home() {
       prompt = prompt.replace(regex, value);
     });
 
-    // 同义词映射表
+    // 同义词映射表（包含所有 3 个模板）
     const synonymGroups: Record<string, {words: string[], label: string}> = {
       protagonist: { words: ['男生', '他'], label: 'protagonist_name' },
       monster: { words: ['骷髅魔', '怪兽', '它'], label: 'monster_name' },
       crowd: { words: ['学生', '他们'], label: 'crowd_name' },
       mech: { words: ['机甲', '重型机甲', '巨型机甲', '它'], label: 'mech_name' },
+      antagonist: { words: ['女侠', '她'], label: 'antagonist_name' },
     };
 
     // 存储所有替换记录（用于高亮）
     const allReplacements: Array<{word: string, color: string, type: string}> = [];
 
-    // 智能全文替换 - name 类变量
-    const nameVars = ['protagonist_name', 'monster_name', 'crowd_name'];
+    // 智能全文替换 - name 类变量（包含所有 3 个模板）
+    const nameVars = ['protagonist_name', 'monster_name', 'crowd_name', 'mech_name', 'antagonist_name'];
     nameVars.forEach((nameVar) => {
       if (modifiedVars[nameVar]) {
         const { old: oldVal, new: newVal } = modifiedVars[nameVar];
@@ -99,14 +100,16 @@ export default function Home() {
       }
     });
 
-    // 特殊处理：台词变量替换（dialogue_crowd 和 dialogue_hero）
-    // 因为台词是硬编码在 timeline 中的，需要单独替换
-    const dialogueReplacements = [
+    // 特殊处理：台词变量替换（因为台词是硬编码在 timeline 中的）
+    const allDialogueVars = [
       { var: 'dialogue_crowd', default: '快走啊威威，这个时候你装什么啊' },
       { var: 'dialogue_hero', default: '下课' },
+      { var: 'dialogue_1', default: '还我狐狸命来！' },
+      { var: 'dialogue_2', default: '今天周四，谁跟你报仇？酱板鸭都没疯狂星期四重要。' },
+      { var: 'dialogue_3', default: 'V 我 50，放你回雪山！' },
     ];
     
-    dialogueReplacements.forEach(({ var: dialogueVar, default: defaultDialogue }) => {
+    allDialogueVars.forEach(({ var: dialogueVar, default: defaultDialogue }) => {
       if (modifiedVars[dialogueVar]) {
         const { new: newDialogue } = modifiedVars[dialogueVar];
         // 替换默认台词为新台词
@@ -117,26 +120,41 @@ export default function Home() {
       }
     });
 
-    // 高亮颜色映射
+    // 高亮颜色映射（包含所有 3 个模板的变量）
     const highlightColors: Record<string, string> = {
+      // 模板 1 变量
       'protagonist_name': 'bg-green-500/50',    // 主角名称 - 绿色
       'monster_name': 'bg-red-500/50',          // 怪兽名称 - 红色
       'crowd_name': 'bg-blue-500/50',           // 人群名称 - 蓝色
       'protagonist_desc': 'bg-purple-500/50',   // 主角描述 - 紫色
       'monster_desc': 'bg-orange-500/50',       // 怪兽描述 - 橙色
       'crowd_desc': 'bg-blue-500/30',           // 人群描述 - 浅蓝色
-      'scene': 'bg-cyan-500/50',                // 场景 - 青色
+      'protagonist_action': 'bg-emerald-500/50', // 主角动作 - 翠绿色
+      'monster_action': 'bg-fuchsia-500/50',    // 怪兽动作 - 紫红色
       'armor': 'bg-yellow-500/50',              // 铠甲 - 黄色
+      'dialogue_crowd': 'bg-amber-500/50',      // 人群台词 - 琥珀色
+      'dialogue_hero': 'bg-lime-500/50',        // 主角台词 - 青柠色
+      // 模板 2 变量
+      'mech_name': 'bg-red-600/50',             // 机甲名称 - 深红色
+      'mech_desc': 'bg-orange-600/50',          // 机甲描述 - 深橙色
+      'mech_action': 'bg-fuchsia-600/50',       // 机甲动作 - 深紫红色
+      'creature': 'bg-teal-500/50',             // 敌对生物 - 青色
+      'theme': 'bg-slate-600/50',               // 核心主题 - 深灰色
+      // 模板 3 变量
+      'antagonist_name': 'bg-pink-600/50',      // 对手名称 - 深粉色
+      'antagonist_desc': 'bg-rose-600/50',      // 对手描述 - 深玫瑰色
+      'prop': 'bg-amber-600/50',                // 道具 - 深琥珀色
+      'dialogue_1': 'bg-yellow-600/50',         // 台词 1 - 深黄色
+      'dialogue_2': 'bg-green-600/50',          // 台词 2 - 深绿色
+      'dialogue_3': 'bg-blue-600/50',           // 台词 3 - 深蓝色
+      // 通用变量
+      'scene': 'bg-cyan-500/50',                // 场景 - 青色
       'lighting': 'bg-pink-500/50',             // 光线环境 - 粉色
       'camera': 'bg-indigo-500/50',             // 镜头方式 - 靛蓝色
       'duration': 'bg-teal-500/50',             // 视频时长 - 蓝绿色
       'style': 'bg-rose-500/50',                // 风格 - 玫瑰色
       'quality': 'bg-slate-500/50',             // 物理质感 - 灰色
-      'dialogue_crowd': 'bg-amber-500/50',      // 人群台词 - 琥珀色
-      'dialogue_hero': 'bg-lime-500/50',        // 主角台词 - 青柠色
       'timeline': 'bg-violet-500/50',           // 时间轴分镜 - 紫色
-      'protagonist_action': 'bg-emerald-500/50', // 主角动作 - 翠绿色
-      'monster_action': 'bg-fuchsia-500/50',    // 怪兽动作 - 紫红色
     };
 
     setGeneratedPrompt(prompt);
