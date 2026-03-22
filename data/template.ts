@@ -1,38 +1,22 @@
 // 视频 Prompt 模板数据 - 校园怪兽铠甲变身模板（骷髅魔大战）
+// 变量结构优化：角色拆分为 name（名称）+ desc（描述）+ action（动作）
 
 export const templates = [
   {
-    id: "skull-demon",
-    name: "校园怪兽铠甲变身模板（骷髅魔大战）",
-    description: "校园场景 + 骷髅魔 + 纳米粒子铠甲变身",
+    id: "skull-demon-v2",
+    name: "校园怪兽铠甲变身模板（优化版）",
+    description: "角色变量拆分优化版 - 支持精准的全文替换",
     
     // 完整的原始 Prompt 模板（带占位符）
+    // 优化点：{protagonist_name} 用于全文替换，{protagonist_desc} 仅用于首次介绍
     rawTemplate: `100% 真人实拍质感，好莱坞 IMAX 大片质感，自然光影，冷峻纪实风格，{lighting}，全程{camera}，呼吸感晃动，随机焦点失焦，每帧如纪录片抓拍。
-16:9 宽屏【场景环境】{scene}。【主体人物】{protagonist}。【铠甲】{armor}
-【突发事件】{monster}。【{duration}一镜到底】{timeline}
+16:9 宽屏【场景环境】{scene}。【主体人物】{protagonist_desc}。【铠甲】{armor}
+【突发事件】{monster_desc}。【{duration}一镜到底】{timeline}
 【物理质感强化】{quality}`,
 
-    // 同义词映射（用于全局替换）- 当替换某个变量时，全文替换所有相关词
-    synonymRules: {
-      protagonist: {
-        // 当主角从"男生"改为"赛车手"时，替换所有这些词
-        keywords: ["男生", "他", "主角", "男生"],
-        replacements: {
-          "男生": "赛车手",
-          "他": "他",  // 代词保持不变或根据性别调整
-          "主角": "主角",
-        }
-      },
-      crowd: {
-        keywords: ["学生", "他们", "人群", "学生"],
-      },
-      monster: {
-        keywords: ["骷髅魔", "它", "怪兽", "骷髅魔"],
-      },
-    },
-
-    // 变量配置
+    // 变量配置（18 个变量）
     variables: {
+      // ===== 基础变量（5 个）=====
       lighting: {
         label: "光线环境",
         icon: "💡",
@@ -93,12 +77,14 @@ export const templates = [
         type: "base",
         default: "真实光影，皮肤毛孔油光，T 恤褶皱，梭形粒子流粗细不一，旋转时有物理惯性和空气摩擦声，尖刺为 60 度三角，边缘锐利，所有动作轻松自然，无任何咬牙、呼吸变重的吃力表现，镜头偶尔轻微晃动均为手持原生质感，音效设计从轻盈沙沙声到清脆咬合，最后口哨声点睛，全程游刃有余。",
         options: [
-          { name: "骷髅魔原版", content: "真实光影，皮肤毛孔油光，T 恤褶皱，梭形粒子流粗细不一，旋转时有物理惯性和空气摩擦声，尖刺为 60 度三角，边缘锐利，所有动作轻松自然，无任何咬牙、呼吸变重的吃力表现，镜头偶尔轻微晃动均为手持原生质感，音效设计从轻盈沙沙声到清脆咬合，最后口哨声点睛，全程游刃有余。" },
+          { name: "原版质感", content: "真实光影，皮肤毛孔油光，T 恤褶皱，梭形粒子流粗细不一，旋转时有物理惯性和空气摩擦声，尖刺为 60 度三角，边缘锐利，所有动作轻松自然，无任何咬牙、呼吸变重的吃力表现，镜头偶尔轻微晃动均为手持原生质感，音效设计从轻盈沙沙声到清脆咬合，最后口哨声点睛，全程游刃有余。" },
           { name: "好莱坞大片", content: "8K 超高清，电影级调色，无 CG 感，物理模拟真实。" },
           { name: "纪录片风格", content: "手持拍摄质感，自然光，真实记录感。" },
           { name: "赛博朋克", content: "霓虹灯光，金属质感，未来科技感。" },
         ]
       },
+
+      // ===== 特有变量 - 场景（1 个）=====
       scene: {
         label: "场景环境",
         icon: "🏫",
@@ -117,54 +103,143 @@ export const templates = [
           { name: "森林秘境", content: "神秘森林深处，阳光透过树叶，雾气缭绕。探险者惊恐后退。" },
         ]
       },
-      protagonist: {
-        label: "主角",
+
+      // ===== 特有变量 - 主角（3 个：name + desc + action）=====
+      protagonist_name: {
+        label: "主角 - 名称",
         icon: "🧑",
         type: "custom",
+        default: "男生",
+        placeholder: "如：男生、赛车手、科学家",
+        options: [
+          { name: "男生", content: "男生" },
+          { name: "赛车手", content: "赛车手" },
+          { name: "学生", content: "学生" },
+          { name: "科学家", content: "科学家" },
+          { name: "上班族", content: "上班族" },
+          { name: "登山者", content: "登山者" },
+          { name: "护士", content: "护士" },
+          { name: "警察", content: "警察" },
+        ]
+      },
+      protagonist_desc: {
+        label: "主角 - 描述",
+        icon: "📝",
+        type: "custom",
         default: "二十出头男生，穿着高中生的校服，在跑道上向前走，长相清秀。",
+        placeholder: "首次介绍时的完整描述",
         options: [
           { name: "高中男生", content: "二十出头男生，穿着高中生的校服，在跑道上向前走，长相清秀。" },
-          { name: "年轻学生", content: "年轻学生，身穿休闲装，从容不迫地走向危险。" },
-          { name: "赛车手", content: "赛车手，穿着赛车服，单手插兜走向怪兽。" },
-          { name: "科学家", content: "科学家，穿着白大褂，冷静观察着眼前的生物。" },
-          { name: "上班族", content: "上班族，西装革履，淡定地走向混乱中心。" },
-          { name: "登山者", content: "登山者，穿着冲锋衣，稳步走向雪山深处。" },
-          { name: "护士", content: "护士，穿着白色制服，展开天使翅膀。" },
-          { name: "警察", content: "警察，身穿制服，变身雷电战甲。" },
+          { name: "赛车手", content: "二十出头赛车手，穿着赛车服，单手插兜，长相坚毅。" },
+          { name: "科学家", content: "中年科学家，穿着白大褂，戴着眼镜，神情冷静。" },
+          { name: "上班族", content: "年轻上班族，西装革履，提着公文包，神色淡定。" },
+          { name: "登山者", content: "登山者，穿着冲锋衣，背着登山包，目光坚定。" },
+          { name: "护士", content: "年轻护士，穿着白色制服，温柔坚定。" },
+          { name: "警察", content: "青年警察，身穿制服，腰配装备，英姿飒爽。" },
         ]
       },
-      monster: {
-        label: "怪兽",
+      protagonist_action: {
+        label: "主角 - 标志性动作",
+        icon: "🎬",
+        type: "custom",
+        default: "单手插兜，慢悠悠朝怪兽方向走去",
+        placeholder: "主角的标志性动作",
+        options: [
+          { name: "插兜漫步", content: "单手插兜，慢悠悠朝怪兽方向走去" },
+          { name: "冷静观察", content: "双手抱胸，冷静观察着眼前的生物" },
+          { name: "淡定前行", content: "提着公文包，淡定地走向混乱中心" },
+          { name: "稳步前进", content: "稳步走向雪山深处" },
+          { name: "展开翅膀", content: "背后展开白色天使翅膀" },
+          { name: "变身战甲", content: "变身雷电战甲" },
+        ]
+      },
+
+      // ===== 特有变量 - 怪兽（3 个：name + desc + action）=====
+      monster_name: {
+        label: "怪兽 - 名称",
         icon: "👹",
         type: "custom",
-        default: "一头三层楼高的骷髅魔正在破坏校园设施和建筑——骷髅脸，穿着铠甲戴着头盔，拿着砍刀和地狱宗教雕塑装饰的盾牌，双眼猩红，浑身环绕着黑烟，每一步踏地震裂地面，到处挥砍破坏。人群惊恐尖叫四散奔逃，衣服和各种物品洒落一地。",
+        default: "骷髅魔",
+        placeholder: "如：骷髅魔、巨龙、凤凰",
         options: [
-          { name: "骷髅魔", content: "一头三层楼高的骷髅魔正在破坏校园设施和建筑——骷髅脸，穿着铠甲戴着头盔，拿着砍刀和地狱宗教雕塑装饰的盾牌，双眼猩红，浑身环绕着黑烟，每一步踏地震裂地面，到处挥砍破坏。人群惊恐尖叫四散奔逃，衣服和各种物品洒落一地。" },
-          { name: "机械巨龙", content: "巨大的机械巨龙从天而降，金属翅膀扇动狂风，激光炮瞄准地面。" },
-          { name: "外星生物", content: "半透明的外星生物漂浮在空中，触手挥舞，释放紫色能量波。" },
-          { name: "火焰凤凰", content: "火焰凤凰从天空俯冲而下，双翼展开遮蔽天空，羽毛燃烧着烈焰。" },
-          { name: "冰雪巨龙", content: "冰雪巨龙从冰川中苏醒，龙息冻结一切，鳞片反射着寒光。" },
-          { name: "雷电巨人", content: "雷电巨人从云层中现身，全身缠绕闪电，每一步都引发雷鸣。" },
+          { name: "骷髅魔", content: "骷髅魔" },
+          { name: "机械巨龙", content: "机械巨龙" },
+          { name: "外星生物", content: "外星生物" },
+          { name: "火焰凤凰", content: "火焰凤凰" },
+          { name: "冰雪巨龙", content: "冰雪巨龙" },
+          { name: "雷电巨人", content: "雷电巨人" },
         ]
       },
-      crowd: {
-        label: "人群",
+      monster_desc: {
+        label: "怪兽 - 描述",
+        icon: "📝",
+        type: "custom",
+        default: "一头三层楼高的骷髅魔正在破坏校园设施和建筑——骷髅脸，穿着铠甲戴着头盔，拿着砍刀和地狱宗教雕塑装饰的盾牌，双眼猩红，浑身环绕着黑烟，每一步踏地震裂地面，到处挥砍破坏。人群惊恐尖叫四散奔逃，衣服和各种物品洒落一地。",
+        placeholder: "怪兽的完整描述",
+        options: [
+          { name: "骷髅魔", content: "一头三层楼高的骷髅魔正在破坏校园设施和建筑——骷髅脸，穿着铠甲戴着头盔，拿着砍刀和地狱宗教雕塑装饰的盾牌，双眼猩红，浑身环绕着黑烟，每一步踏地震裂地面，到处挥砍破坏。人群惊恐尖叫四散奔逃，衣服和各种物品洒落一地。" },
+          { name: "机械巨龙", content: "巨大的机械巨龙从天而降，金属翅膀扇动狂风，激光炮瞄准地面，鳞片闪烁着冷光。" },
+          { name: "外星生物", content: "半透明的外星生物漂浮在空中，触手挥舞，释放紫色能量波，令人不寒而栗。" },
+          { name: "火焰凤凰", content: "火焰凤凰从天空俯冲而下，双翼展开遮蔽天空，羽毛燃烧着烈焰，所到之处一片焦土。" },
+          { name: "冰雪巨龙", content: "冰雪巨龙从冰川中苏醒，龙息冻结一切，鳞片反射着寒光，周围温度骤降。" },
+          { name: "雷电巨人", content: "雷电巨人从云层中现身，全身缠绕闪电，每一步都引发雷鸣，手持闪电长矛。" },
+        ]
+      },
+      monster_action: {
+        label: "怪兽 - 标志性动作",
+        icon: "🎬",
+        type: "custom",
+        default: "挥刀咆哮",
+        placeholder: "怪兽的标志性动作",
+        options: [
+          { name: "挥刀咆哮", content: "挥刀咆哮" },
+          { name: "激光瞄准", content: "激光炮瞄准地面" },
+          { name: "释放能量波", content: "释放紫色能量波" },
+          { name: "俯冲攻击", content: "从天空俯冲而下" },
+          { name: "龙息冻结", content: "龙息冻结一切" },
+          { name: "挥舞闪电", content: "挥舞闪电长矛" },
+        ]
+      },
+
+      // ===== 特有变量 - 人群（2 个：name + desc）=====
+      crowd_name: {
+        label: "人群 - 名称",
         icon: "👥",
         type: "custom",
+        default: "学生",
+        placeholder: "如：学生、路人、游客",
+        options: [
+          { name: "学生", content: "学生" },
+          { name: "路人", content: "路人" },
+          { name: "游客", content: "游客" },
+          { name: "骑士", content: "骑士" },
+          { name: "宇航员", content: "宇航员" },
+          { name: "研究人员", content: "研究人员" },
+        ]
+      },
+      crowd_desc: {
+        label: "人群 - 状态",
+        icon: "📝",
+        type: "custom",
         default: "惊慌的学生",
+        placeholder: "人群的状态描述",
         options: [
           { name: "惊慌的学生", content: "惊慌的学生" },
           { name: "奔逃的路人", content: "奔逃的路人" },
           { name: "惊恐的游客", content: "惊恐的游客" },
           { name: "严阵以待的骑士", content: "严阵以待的骑士" },
           { name: "紧急避险的宇航员", content: "紧急避险的宇航员" },
+          { name: "慌乱撤离的研究人员", content: "慌乱撤离的研究人员" },
         ]
       },
+
+      // ===== 特有变量 - 铠甲（1 个）=====
       armor: {
         label: "铠甲",
         icon: "🛡️",
         type: "custom",
         default: "参考图 2，暗金色机械铠甲，纳米粒子流动，四道梭形粒子环环绕上半身。",
+        placeholder: "铠甲的描述",
         options: [
           { name: "纳米粒子铠甲", content: "参考图 2，暗金色机械铠甲，纳米粒子流动，四道梭形粒子环环绕上半身。" },
           { name: "银色铠甲", content: "银色金属铠甲，表面流动着蓝色能量纹路。" },
@@ -172,15 +247,15 @@ export const templates = [
           { name: "冰雪铠甲", content: "冰晶构成的蓝色铠甲，散发着寒气。" },
           { name: "雷电铠甲", content: "紫色雷电缠绕的战甲，电芒四射。" },
           { name: "天使铠甲", content: "白色羽翼铠甲，背后展开光之翼。" },
-          { name: "机械巨龙", content: "机械巨龙伙伴，金属鳞片闪烁着冷光。" },
         ]
       },
+
+      // ===== 特有变量 - 台词（2 个）=====
       dialogue_crowd: {
         label: "人群台词",
         icon: "💬",
         type: "custom",
         default: "快走啊威威，这个时候你装什么啊",
-        options: [],
         placeholder: "输入人群台词..."
       },
       dialogue_hero: {
@@ -188,9 +263,10 @@ export const templates = [
         icon: "🎤",
         type: "custom",
         default: "下课",
-        options: [],
         placeholder: "输入主角台词..."
       },
+
+      // ===== 特有变量 - 时间轴分镜（1 个）=====
       timeline: {
         label: "时间轴分镜",
         icon: "📋",

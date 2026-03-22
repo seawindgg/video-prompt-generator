@@ -43,7 +43,7 @@ export default function Home() {
         values[key] = selection.custom;
         modifiedVars.push(key);
       } else if (selection.selected) {
-        const option = variable.options.find(o => o.name === selection.selected);
+        const option = (variable as any).options?.find((o: any) => o.name === selection.selected);
         values[key] = option?.content || variable.default;
         if (option) modifiedVars.push(key);
       } else {
@@ -58,50 +58,17 @@ export default function Home() {
       prompt = prompt.replace(regex, value);
     });
 
-    // 智能同义词全局替换
-    if (selectedTemplate.synonymRules) {
-      Object.entries(selectedTemplate.synonymRules).forEach(([varKey, rule]) => {
-        const isModified = modifiedVars.includes(varKey);
-        if (isModified && varKey === 'protagonist') {
-          // 提取新主角的关键词
-          const newProtagonist = values[varKey];
-          // 从新主角描述中提取核心词（如"赛车手"）
-          const match = newProtagonist.match(/^(.+?)，/);
-          const coreWord = match ? match[1] : newProtagonist.split('，')[0];
-          
-          // 替换原文中的"男生"
-          if (coreWord && coreWord !== '男生') {
-            prompt = prompt.replace(/男生/g, coreWord);
-          }
-        }
-        if (isModified && varKey === 'crowd') {
-          const newCrowd = values[varKey];
-          const match = newCrowd.match(/^(?:惊慌 | 奔逃 | 惊恐 | 严阵以待 | 紧急避险) 的 (.+?)$/);
-          const coreWord = match ? match[1] : newCrowd;
-          if (coreWord && coreWord !== '学生') {
-            prompt = prompt.replace(/学生/g, coreWord);
-          }
-        }
-        if (isModified && varKey === 'monster') {
-          const newMonster = values[varKey];
-          const match = newMonster.match(/一头 (?:三层楼高的)?(.+?) 正在/);
-          const coreWord = match ? match[1] : newMonster.split(' ')[0];
-          if (coreWord && coreWord !== '骷髅魔') {
-            prompt = prompt.replace(/骷髅魔/g, coreWord);
-          }
-        }
-      });
-    }
-
     setGeneratedPrompt(prompt);
 
     // 生成带高亮的 HTML
     let highlighted = prompt;
     
-    // 高亮被修改的变量内容
+    // 高亮被修改的变量内容（仅高亮 name 类变量的短词）
+    const nameVars = ['protagonist_name', 'monster_name', 'crowd_name'];
     modifiedVars.forEach((varKey) => {
       const varValue = values[varKey];
-      if (varValue) {
+      // 仅高亮 name 类变量（短词），避免长描述高亮导致阅读困难
+      if (varValue && nameVars.includes(varKey)) {
         // 转义 HTML 特殊字符
         const escapedValue = varValue
           .replace(/&/g, '&amp;')
@@ -109,7 +76,7 @@ export default function Home() {
           .replace(/>/g, '&gt;');
         
         // 创建高亮正则（全局替换）
-        const regex = new RegExp(`(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
+        const regex = new RegExp(`\\b(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'g');
         highlighted = highlighted.replace(regex, '<mark class="bg-yellow-500/50 text-white px-0.5 rounded">$1</mark>');
       }
     });
@@ -144,7 +111,7 @@ export default function Home() {
     if (!selection || !variable) return "";
     if (selection.custom) return selection.custom;
     if (selection.selected) {
-      const option = variable.options.find(o => o.name === selection.selected);
+      const option = (variable as any).options?.find((o: any) => o.name === selection.selected);
       return option?.content || selection.selected;
     }
     return variable.default;
@@ -279,14 +246,14 @@ export default function Home() {
                       </label>
                       
                       {/* 下拉选择 */}
-                      {variable.options && variable.options.length > 0 && (
+                      {(variable as any).options && (variable as any).options.length > 0 && (
                         <select
                           value={selection.selected}
                           onChange={(e) => handleSelectChange(key, e.target.value)}
                           className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                         >
                           <option value="">使用默认值</option>
-                          {variable.options.map((option) => (
+                          {(variable as any).options.map((option: any) => (
                             <option key={option.name} value={option.name}>
                               {option.name}
                             </option>
