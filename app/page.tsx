@@ -58,54 +58,74 @@ export default function Home() {
       prompt = prompt.replace(regex, value);
     });
 
-    // 智能全文替换：当 name 类变量被修改时，在全文中替换
-    // 但排除 desc 类变量的内容（避免重复替换）
+    // 同义词映射表 - 将相关词归为一类
+    const synonymGroups: Record<string, string[]> = {
+      protagonist: ['男生', '他', '主角'],
+      monster: ['骷髅魔', '怪兽', '它', '魔物'],
+      crowd: ['学生', '他们', '人群'],
+    };
+
+    // 智能全文替换
     const nameToDescMap: Record<string, string> = {
       'protagonist_name': 'protagonist_desc',
       'monster_name': 'monster_desc',
       'crowd_name': 'crowd_desc',
     };
     
+    const replacements: Array<{oldWord: string, newWord: string}> = []; // 记录所有替换
+
     Object.entries(nameToDescMap).forEach(([nameVar, descVar]) => {
       const isNameModified = modifiedVars.includes(nameVar);
-      const isDescModified = modifiedVars.includes(descVar);
       
       if (isNameModified) {
         const newName = values[nameVar];
         const oldName = selectedTemplate.variables[nameVar as keyof typeof selectedTemplate.variables].default;
-        const descValue = values[descVar];
         
-        // 如果名称被修改，且描述没有被修改，则在全文中替换（排除描述部分）
+        // 如果名称被修改
         if (oldName && newName !== oldName) {
-          // 先从 prompt 中临时移除描述内容
-          const tempPrompt = prompt.replace(descValue, '___DESC_PLACEHOLDER___');
-          // 替换名称
-          const replacedPrompt = tempPrompt.replace(new RegExp(oldName, 'g'), newName);
-          // 恢复描述内容
-          prompt = replacedPrompt.replace('___DESC_PLACEHOLDER___', descValue);
+          // 找到对应的同义词组
+          let synonymGroup: string[] = [];
+          if (nameVar === 'protagonist_name') synonymGroup = synonymGroups.protagonist;
+          else if (nameVar === 'monster_name') synonymGroup = synonymGroups.monster;
+          else if (nameVar === 'crowd_name') synonymGroup = synonymGroups.crowd;
+
+          // 从 newName 中提取核心词（如"二十出头赛车手..." → "赛车手"）
+          const coreNewWord = newName.split(/[，,]/)[0].trim();
+          
+          // 替换同义词组中的所有词
+          synonymGroup.forEach((oldWord) => {
+            if (oldWord !== oldName) {
+              // 替换同义词
+              const regex = new RegExp(oldWord, 'g');
+              if (prompt.match(regex)) {
+                prompt = prompt.replace(regex, coreNewWord);
+                replacements.push({ oldWord, newWord: coreNewWord });
+              }
+            }
+          });
+          
+          // 记录主替换
+          replacements.push({ oldWord: oldName, newWord: coreNewWord });
         }
       }
     });
 
     setGeneratedPrompt(prompt);
 
-    // 生成带高亮的 HTML
+    // 生成带高亮的 HTML - 高亮所有被替换的新词
     let highlighted = prompt;
     
-    // 高亮被修改的变量内容（仅高亮 name 类变量的短词）
-    const nameVars = ['protagonist_name', 'monster_name', 'crowd_name'];
-    modifiedVars.forEach((varKey) => {
-      const varValue = values[varKey];
-      // 仅高亮 name 类变量（短词），避免长描述高亮导致阅读困难
-      if (varValue && nameVars.includes(varKey)) {
+    // 高亮所有替换后的新词
+    replacements.forEach(({ newWord }) => {
+      if (newWord) {
         // 转义 HTML 特殊字符
-        const escapedValue = varValue
+        const escapedValue = newWord
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
         
         // 创建高亮正则（全局替换）
-        const regex = new RegExp(`\\b(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'g');
+        const regex = new RegExp(`(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
         highlighted = highlighted.replace(regex, '<mark class="bg-yellow-500/50 text-white px-0.5 rounded">$1</mark>');
       }
     });
