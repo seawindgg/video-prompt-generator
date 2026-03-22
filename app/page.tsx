@@ -100,13 +100,24 @@ export default function Home() {
 
     // 高亮颜色映射
     const highlightColors: Record<string, string> = {
-      'protagonist_name': 'bg-green-500/50',    // 主角 - 绿色
-      'monster_name': 'bg-red-500/50',          // 怪兽 - 红色
-      'crowd_name': 'bg-blue-500/50',           // 人群 - 蓝色
+      'protagonist_name': 'bg-green-500/50',    // 主角名称 - 绿色
+      'monster_name': 'bg-red-500/50',          // 怪兽名称 - 红色
+      'crowd_name': 'bg-blue-500/50',           // 人群名称 - 蓝色
       'protagonist_desc': 'bg-purple-500/50',   // 主角描述 - 紫色
       'monster_desc': 'bg-orange-500/50',       // 怪兽描述 - 橙色
+      'crowd_desc': 'bg-blue-500/30',           // 人群描述 - 浅蓝色
       'scene': 'bg-cyan-500/50',                // 场景 - 青色
       'armor': 'bg-yellow-500/50',              // 铠甲 - 黄色
+      'lighting': 'bg-pink-500/50',             // 光线环境 - 粉色
+      'camera': 'bg-indigo-500/50',             // 镜头方式 - 靛蓝色
+      'duration': 'bg-teal-500/50',             // 视频时长 - 蓝绿色
+      'style': 'bg-rose-500/50',                // 风格 - 玫瑰色
+      'quality': 'bg-slate-500/50',             // 物理质感 - 灰色
+      'dialogue_crowd': 'bg-amber-500/50',      // 人群台词 - 琥珀色
+      'dialogue_hero': 'bg-lime-500/50',        // 主角台词 - 青柠色
+      'timeline': 'bg-violet-500/50',           // 时间轴分镜 - 紫色
+      'protagonist_action': 'bg-emerald-500/50', // 主角动作 - 翠绿色
+      'monster_action': 'bg-fuchsia-500/50',    // 怪兽动作 - 紫红色
     };
 
     setGeneratedPrompt(prompt);
@@ -116,10 +127,11 @@ export default function Home() {
     
     // 高亮所有被修改的变量内容
     Object.entries(modifiedVars).forEach(([key, { old: oldVal, new: newVal }]) => {
+      const color = highlightColors[key] || 'bg-yellow-500/50';
+      
       // 对于 name 类变量，高亮核心词
       if (nameVars.includes(key)) {
         const coreWord = newVal.split(/[，,]/)[0].trim().substring(0, 10);
-        const color = highlightColors[key] || 'bg-yellow-500/50';
         const escapedValue = coreWord
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
@@ -127,13 +139,22 @@ export default function Home() {
         const regex = new RegExp(`(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
         highlighted = highlighted.replace(regex, `<mark class="${color} text-white px-0.5 rounded">$1</mark>`);
       }
-      // 对于 desc 类变量，如果和 name 不同，也高亮
-      else if (key.includes('_desc') || key.includes('_action')) {
-        const color = highlightColors[key] || 'bg-purple-500/50';
-        // 高亮新值中的独特部分（排除 name 已高亮的部分）
-        const uniquePart = newVal.replace(oldVal.split(/[，,]/)[0].trim(), '').trim();
-        if (uniquePart && uniquePart.length > 0 && uniquePart.length < 100) {
-          const escapedValue = uniquePart
+      // 对于其他变量（desc/action/基础变量等），高亮新值中的独特部分
+      else {
+        // 提取新值中的独特内容（排除已高亮的 name 部分）
+        let contentToHighlight = newVal;
+        
+        // 如果新值包含 name 类变量的核心词，排除它（避免重复高亮）
+        nameVars.forEach((nameVar) => {
+          if (modifiedVars[nameVar]) {
+            const nameCore = modifiedVars[nameVar].new.split(/[，,]/)[0].trim().substring(0, 10);
+            contentToHighlight = contentToHighlight.replace(nameCore, '');
+          }
+        });
+        
+        // 只高亮长度适中的内容（避免高亮过长的 timeline）
+        if (contentToHighlight && contentToHighlight.trim().length > 0 && contentToHighlight.length < 200) {
+          const escapedValue = contentToHighlight
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
