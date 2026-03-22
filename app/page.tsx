@@ -35,17 +35,17 @@ export default function Home() {
   const generatePromptWithHighlight = useCallback(() => {
     // 获取每层的值（自定义优先，否则用选择的，最后用默认值）
     const values: Record<string, string> = {};
-    const modifiedVars: string[] = []; // 记录哪些变量被修改了
+    const modifiedVars: Record<string, {old: string, new: string}> = {}; // 记录替换
     
     Object.entries(selectedTemplate.variables).forEach(([key, variable]) => {
       const selection = selections[key] || { selected: "", custom: "" };
       if (selection.custom) {
         values[key] = selection.custom;
-        modifiedVars.push(key);
+        modifiedVars[key] = { old: variable.default, new: selection.custom };
       } else if (selection.selected) {
         const option = (variable as any).options?.find((o: any) => o.name === selection.selected);
         values[key] = option?.content || variable.default;
-        if (option) modifiedVars.push(key);
+        if (option) modifiedVars[key] = { old: variable.default, new: option.content };
       } else {
         values[key] = variable.default;
       }
@@ -58,75 +58,88 @@ export default function Home() {
       prompt = prompt.replace(regex, value);
     });
 
-    // 同义词映射表 - 将相关词归为一类
-    const synonymGroups: Record<string, string[]> = {
-      protagonist: ['男生', '他', '主角'],
-      monster: ['骷髅魔', '怪兽', '它', '魔物'],
-      crowd: ['学生', '他们', '人群'],
+    // 同义词映射表
+    const synonymGroups: Record<string, {words: string[], label: string}> = {
+      protagonist: { words: ['男生', '他'], label: 'protagonist_name' },
+      monster: { words: ['骷髅魔', '怪兽', '它'], label: 'monster_name' },
+      crowd: { words: ['学生', '他们'], label: 'crowd_name' },
     };
 
-    // 智能全文替换
-    const nameToDescMap: Record<string, string> = {
-      'protagonist_name': 'protagonist_desc',
-      'monster_name': 'monster_desc',
-      'crowd_name': 'crowd_desc',
-    };
-    
-    const replacements: Array<{oldWord: string, newWord: string}> = []; // 记录所有替换
+    // 存储所有替换记录（用于高亮）
+    const allReplacements: Array<{word: string, color: string, type: string}> = [];
 
-    Object.entries(nameToDescMap).forEach(([nameVar, descVar]) => {
-      const isNameModified = modifiedVars.includes(nameVar);
-      
-      if (isNameModified) {
-        const newName = values[nameVar];
-        const oldName = selectedTemplate.variables[nameVar as keyof typeof selectedTemplate.variables].default;
+    // 智能全文替换 - name 类变量
+    const nameVars = ['protagonist_name', 'monster_name', 'crowd_name'];
+    nameVars.forEach((nameVar) => {
+      if (modifiedVars[nameVar]) {
+        const { old: oldVal, new: newVal } = modifiedVars[nameVar];
         
-        // 如果名称被修改
-        if (oldName && newName !== oldName) {
-          // 找到对应的同义词组
-          let synonymGroup: string[] = [];
-          if (nameVar === 'protagonist_name') synonymGroup = synonymGroups.protagonist;
-          else if (nameVar === 'monster_name') synonymGroup = synonymGroups.monster;
-          else if (nameVar === 'crowd_name') synonymGroup = synonymGroups.crowd;
-
-          // 从 newName 中提取核心词（如"二十出头赛车手..." → "赛车手"）
-          const coreNewWord = newName.split(/[，,]/)[0].trim();
-          
+        // 从新值中提取核心词
+        let coreNewWord = newVal.split(/[，,]/)[0].trim();
+        // 如果核心词太长，取前 10 个字
+        if (coreNewWord.length > 10) coreNewWord = coreNewWord.substring(0, 10);
+        
+        // 找到对应的同义词组
+        let synonymGroup = null;
+        if (nameVar === 'protagonist_name') synonymGroup = synonymGroups.protagonist;
+        else if (nameVar === 'monster_name') synonymGroup = synonymGroups.monster;
+        else if (nameVar === 'crowd_name') synonymGroup = synonymGroups.crowd;
+        
+        if (synonymGroup) {
           // 替换同义词组中的所有词
-          synonymGroup.forEach((oldWord) => {
-            if (oldWord !== oldName) {
-              // 替换同义词
-              const regex = new RegExp(oldWord, 'g');
-              if (prompt.match(regex)) {
-                prompt = prompt.replace(regex, coreNewWord);
-                replacements.push({ oldWord, newWord: coreNewWord });
-              }
+          synonymGroup.words.forEach((oldWord) => {
+            const regex = new RegExp(oldWord, 'g');
+            if (prompt.match(regex)) {
+              prompt = prompt.replace(regex, coreNewWord);
+              allReplacements.push({ word: coreNewWord, color: 'bg-green-500/50', type: nameVar });
             }
           });
-          
-          // 记录主替换
-          replacements.push({ oldWord: oldName, newWord: coreNewWord });
         }
       }
     });
 
+    // 高亮颜色映射
+    const highlightColors: Record<string, string> = {
+      'protagonist_name': 'bg-green-500/50',    // 主角 - 绿色
+      'monster_name': 'bg-red-500/50',          // 怪兽 - 红色
+      'crowd_name': 'bg-blue-500/50',           // 人群 - 蓝色
+      'protagonist_desc': 'bg-purple-500/50',   // 主角描述 - 紫色
+      'monster_desc': 'bg-orange-500/50',       // 怪兽描述 - 橙色
+      'scene': 'bg-cyan-500/50',                // 场景 - 青色
+      'armor': 'bg-yellow-500/50',              // 铠甲 - 黄色
+    };
+
     setGeneratedPrompt(prompt);
 
-    // 生成带高亮的 HTML - 高亮所有被替换的新词
+    // 生成带高亮的 HTML
     let highlighted = prompt;
     
-    // 高亮所有替换后的新词
-    replacements.forEach(({ newWord }) => {
-      if (newWord) {
-        // 转义 HTML 特殊字符
-        const escapedValue = newWord
+    // 高亮所有被修改的变量内容
+    Object.entries(modifiedVars).forEach(([key, { old: oldVal, new: newVal }]) => {
+      // 对于 name 类变量，高亮核心词
+      if (nameVars.includes(key)) {
+        const coreWord = newVal.split(/[，,]/)[0].trim().substring(0, 10);
+        const color = highlightColors[key] || 'bg-yellow-500/50';
+        const escapedValue = coreWord
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
-        
-        // 创建高亮正则（全局替换）
         const regex = new RegExp(`(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
-        highlighted = highlighted.replace(regex, '<mark class="bg-yellow-500/50 text-white px-0.5 rounded">$1</mark>');
+        highlighted = highlighted.replace(regex, `<mark class="${color} text-white px-0.5 rounded">$1</mark>`);
+      }
+      // 对于 desc 类变量，如果和 name 不同，也高亮
+      else if (key.includes('_desc') || key.includes('_action')) {
+        const color = highlightColors[key] || 'bg-purple-500/50';
+        // 高亮新值中的独特部分（排除 name 已高亮的部分）
+        const uniquePart = newVal.replace(oldVal.split(/[，,]/)[0].trim(), '').trim();
+        if (uniquePart && uniquePart.length > 0 && uniquePart.length < 100) {
+          const escapedValue = uniquePart
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+          const regex = new RegExp(`(${escapedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
+          highlighted = highlighted.replace(regex, `<mark class="${color} text-white px-0.5 rounded">$1</mark>`);
+        }
       }
     });
 
