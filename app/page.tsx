@@ -86,6 +86,8 @@ export default function Home() {
         if (nameVar === 'protagonist_name') synonymGroup = synonymGroups.protagonist;
         else if (nameVar === 'monster_name') synonymGroup = synonymGroups.monster;
         else if (nameVar === 'crowd_name') synonymGroup = synonymGroups.crowd;
+        else if (nameVar === 'mech_name') synonymGroup = synonymGroups.mech;
+        else if (nameVar === 'antagonist_name') synonymGroup = synonymGroups.antagonist;
         
         if (synonymGroup) {
           // 替换同义词组中的所有词
