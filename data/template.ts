@@ -2,21 +2,20 @@
 // 变量结构优化：角色拆分为 name（名称）+ desc（描述）+ action（动作）
 
 export const templates = [
+  // =====================================================
+  // 模板 1: 校园怪兽铠甲变身模板
+  // =====================================================
   {
     id: "skull-demon-v2",
     name: "校园怪兽铠甲变身模板（优化版）",
     description: "角色变量拆分优化版 - 支持精准的全文替换",
     
-    // 完整的原始 Prompt 模板（带占位符）
-    // 优化点：{protagonist_name} 用于全文替换，{protagonist_desc} 仅用于首次介绍
     rawTemplate: `100% 真人实拍质感，好莱坞 IMAX 大片质感，自然光影，冷峻纪实风格，{lighting}，全程{camera}，呼吸感晃动，随机焦点失焦，每帧如纪录片抓拍。
 16:9 宽屏【场景环境】{scene}。【主体人物】{protagonist_desc}。【铠甲】{armor}
 【突发事件】{monster_desc}。【{duration}一镜到底】{timeline}
 【物理质感强化】{quality}`,
 
-    // 变量配置（18 个变量）
     variables: {
-      // ===== 基础变量（5 个）=====
       lighting: {
         label: "光线环境",
         icon: "💡",
@@ -83,8 +82,6 @@ export const templates = [
           { name: "赛博朋克", content: "霓虹灯光，金属质感，未来科技感。" },
         ]
       },
-
-      // ===== 特有变量 - 场景（1 个）=====
       scene: {
         label: "场景环境",
         icon: "🏫",
@@ -103,14 +100,11 @@ export const templates = [
           { name: "森林秘境", content: "神秘森林深处，阳光透过树叶，雾气缭绕。探险者惊恐后退。" },
         ]
       },
-
-      // ===== 特有变量 - 主角（3 个：name + desc + action）=====
       protagonist_name: {
         label: "主角 - 名称",
         icon: "🧑",
         type: "custom",
         default: "男生",
-        placeholder: "如：男生、赛车手、科学家",
         options: [
           { name: "男生", content: "男生" },
           { name: "赛车手", content: "赛车手" },
@@ -127,7 +121,6 @@ export const templates = [
         icon: "📝",
         type: "custom",
         default: "二十出头男生，穿着高中生的校服，在跑道上向前走，长相清秀。",
-        placeholder: "首次介绍时的完整描述",
         options: [
           { name: "高中男生", content: "二十出头男生，穿着高中生的校服，在跑道上向前走，长相清秀。" },
           { name: "赛车手", content: "二十出头赛车手，穿着赛车服，单手插兜，长相坚毅。" },
@@ -143,7 +136,6 @@ export const templates = [
         icon: "🎬",
         type: "custom",
         default: "单手插兜，慢悠悠朝怪兽方向走去",
-        placeholder: "主角的标志性动作",
         options: [
           { name: "插兜漫步", content: "单手插兜，慢悠悠朝怪兽方向走去" },
           { name: "冷静观察", content: "双手抱胸，冷静观察着眼前的生物" },
@@ -153,14 +145,11 @@ export const templates = [
           { name: "变身战甲", content: "变身雷电战甲" },
         ]
       },
-
-      // ===== 特有变量 - 怪兽（3 个：name + desc + action）=====
       monster_name: {
         label: "怪兽 - 名称",
         icon: "👹",
         type: "custom",
         default: "骷髅魔",
-        placeholder: "如：骷髅魔、巨龙、凤凰",
         options: [
           { name: "骷髅魔", content: "骷髅魔" },
           { name: "机械巨龙", content: "机械巨龙" },
@@ -175,7 +164,6 @@ export const templates = [
         icon: "📝",
         type: "custom",
         default: "一头三层楼高的骷髅魔正在破坏校园设施和建筑——骷髅脸，穿着铠甲戴着头盔，拿着砍刀和地狱宗教雕塑装饰的盾牌，双眼猩红，浑身环绕着黑烟，每一步踏地震裂地面，到处挥砍破坏。人群惊恐尖叫四散奔逃，衣服和各种物品洒落一地。",
-        placeholder: "怪兽的完整描述",
         options: [
           { name: "骷髅魔", content: "一头三层楼高的骷髅魔正在破坏校园设施和建筑——骷髅脸，穿着铠甲戴着头盔，拿着砍刀和地狱宗教雕塑装饰的盾牌，双眼猩红，浑身环绕着黑烟，每一步踏地震裂地面，到处挥砍破坏。人群惊恐尖叫四散奔逃，衣服和各种物品洒落一地。" },
           { name: "机械巨龙", content: "巨大的机械巨龙从天而降，金属翅膀扇动狂风，激光炮瞄准地面，鳞片闪烁着冷光。" },
@@ -190,7 +178,6 @@ export const templates = [
         icon: "🎬",
         type: "custom",
         default: "挥刀咆哮",
-        placeholder: "怪兽的标志性动作",
         options: [
           { name: "挥刀咆哮", content: "挥刀咆哮" },
           { name: "激光瞄准", content: "激光炮瞄准地面" },
@@ -200,14 +187,11 @@ export const templates = [
           { name: "挥舞闪电", content: "挥舞闪电长矛" },
         ]
       },
-
-      // ===== 特有变量 - 人群（2 个：name + desc）=====
       crowd_name: {
         label: "人群 - 名称",
         icon: "👥",
         type: "custom",
         default: "学生",
-        placeholder: "如：学生、路人、游客",
         options: [
           { name: "学生", content: "学生" },
           { name: "路人", content: "路人" },
@@ -222,7 +206,6 @@ export const templates = [
         icon: "📝",
         type: "custom",
         default: "惊慌的学生",
-        placeholder: "人群的状态描述",
         options: [
           { name: "惊慌的学生", content: "惊慌的学生" },
           { name: "奔逃的路人", content: "奔逃的路人" },
@@ -232,14 +215,11 @@ export const templates = [
           { name: "慌乱撤离的研究人员", content: "慌乱撤离的研究人员" },
         ]
       },
-
-      // ===== 特有变量 - 铠甲（1 个）=====
       armor: {
         label: "铠甲",
         icon: "🛡️",
         type: "custom",
         default: "参考图 2，暗金色机械铠甲，纳米粒子流动，四道梭形粒子环环绕上半身。",
-        placeholder: "铠甲的描述",
         options: [
           { name: "纳米粒子铠甲", content: "参考图 2，暗金色机械铠甲，纳米粒子流动，四道梭形粒子环环绕上半身。" },
           { name: "银色铠甲", content: "银色金属铠甲，表面流动着蓝色能量纹路。" },
@@ -249,13 +229,12 @@ export const templates = [
           { name: "天使铠甲", content: "白色羽翼铠甲，背后展开光之翼。" },
         ]
       },
-
-      // ===== 特有变量 - 台词（2 个）=====
       dialogue_crowd: {
         label: "人群台词",
         icon: "💬",
         type: "custom",
         default: "快走啊威威，这个时候你装什么啊",
+        options: [],
         placeholder: "输入人群台词..."
       },
       dialogue_hero: {
@@ -263,10 +242,9 @@ export const templates = [
         icon: "🎤",
         type: "custom",
         default: "下课",
+        options: [],
         placeholder: "输入主角台词..."
       },
-
-      // ===== 特有变量 - 时间轴分镜（1 个）=====
       timeline: {
         label: "时间轴分镜",
         icon: "📋",
@@ -278,8 +256,210 @@ export const templates = [
           { name: "自定义", content: "" },
         ]
       },
-    }
-  }
+    },
+  },
+
+  // =====================================================
+  // 模板 2: 科幻机甲变身模板
+  // =====================================================
+  {
+    id: "mech-transform",
+    name: "科幻机甲变身模板（重工业机械）",
+    description: "写实科技感，科幻机甲，磅礴史诗，重工业机械美学",
+    
+    rawTemplate: `核心主题：{theme}
+
+人物设定：{protagonist_desc}
+
+场景与机甲：{scene}，{mech_desc}
+
+画质与氛围：{quality}
+
+镜头与画面：{camera}，{timeline}
+
+【物理质感强化】{style}`,
+
+    variables: {
+      theme: {
+        label: "核心主题",
+        icon: "🎬",
+        type: "base",
+        default: "写实科技感，科幻机甲，磅礴史诗，重工业机械美学，真人演绎，极限运动",
+        options: [
+          { name: "重工业机甲", content: "写实科技感，科幻机甲，磅礴史诗，重工业机械美学，真人演绎，极限运动" },
+          { name: "赛博朋克", content: "赛博朋克风格，霓虹灯光，未来科技感" },
+          { name: "太空歌剧", content: "太空史诗，星际战争，宏大场景" },
+        ]
+      },
+      protagonist_name: {
+        label: "主角 - 名称",
+        icon: "🧑",
+        type: "custom",
+        default: "特勤",
+        options: [
+          { name: "特勤", content: "特勤" },
+          { name: "飞行员", content: "飞行员" },
+          { name: "战士", content: "战士" },
+          { name: "科学家", content: "科学家" },
+        ]
+      },
+      protagonist_desc: {
+        label: "主角 - 描述",
+        icon: "📝",
+        type: "custom",
+        default: "参考照片，1.7 米，眉头微皱，表情坚毅，特勤黑色作战服，战术马甲，带屏控制器，服装有污渍划痕。",
+        options: [
+          { name: "特勤人员", content: "参考照片，1.7 米，眉头微皱，表情坚毅，特勤黑色作战服，战术马甲，带屏控制器，服装有污渍划痕。" },
+          { name: "飞行员", content: "身穿飞行服，头戴头盔，眼神专注，装备齐全。" },
+          { name: "女战士", content: "女性战士，短发干练，战斗服贴身，眼神锐利。" },
+        ]
+      },
+      protagonist_action: {
+        label: "主角 - 动作",
+        icon: "🎬",
+        type: "custom",
+        default: "行走中点击左臂控制器，激活全息投影，穿戴红色机械臂铠",
+        options: [
+          { name: "激活臂铠", content: "行走中点击左臂控制器，激活全息投影，穿戴红色机械臂铠" },
+          { name: "跳伞变身", content: "跃出船舱，在空中双手展开，转体旋转 360 度" },
+          { name: "启动协议", content: "点击左臂控制器激活启动协议，伴随数字化全息界面" },
+        ]
+      },
+      scene: {
+        label: "场景环境",
+        icon: "🏙️",
+        type: "custom",
+        default: "未来感飞船船舱，海上万米高空，乌云闪电，海面海雾，能见度低。",
+        options: [
+          { name: "飞船船舱", content: "未来感飞船船舱，海上万米高空，乌云闪电，海面海雾，能见度低。" },
+          { name: "太空站", content: "太空站外部，地球背景，星辰闪烁。" },
+          { name: "城市上空", content: "未来城市上空，霓虹闪烁，飞行汽车穿梭。" },
+        ]
+      },
+      armor: {
+        label: "装备",
+        icon: "🛡️",
+        type: "custom",
+        default: "红色机械臂铠，高科技战术马甲，虚拟臂铠，全息投影。",
+        options: [
+          { name: "机械臂铠", content: "红色机械臂铠，高科技战术马甲，虚拟臂铠，全息投影。" },
+          { name: "能量护盾", content: "蓝色能量护盾，环绕全身，科技感十足。" },
+          { name: "飞行背包", content: "喷气式飞行背包，推进器点亮，金属质感。" },
+        ]
+      },
+      mech_name: {
+        label: "机甲 - 名称",
+        icon: "🤖",
+        type: "custom",
+        default: "机甲",
+        options: [
+          { name: "机甲", content: "机甲" },
+          { name: "战甲", content: "战甲" },
+          { name: "机器人", content: "机器人" },
+          { name: "机甲战士", content: "机甲战士" },
+        ]
+      },
+      mech_desc: {
+        label: "机甲 - 描述",
+        icon: "📝",
+        type: "custom",
+        default: "80 米高重型机甲，真实金属质感，重工业机械美学，哑光涂装磨损掉漆，关节油污。",
+        options: [
+          { name: "重型机甲", content: "80 米高重型机甲，真实金属质感，重工业机械美学，哑光涂装磨损掉漆，关节油污。" },
+          { name: "轻型战甲", content: "30 米高轻型战甲，流线型设计，银色金属光泽。" },
+          { name: "飞行机甲", content: "50 米高飞行机甲，推进器环绕，蓝色火焰喷射。" },
+        ]
+      },
+      mech_action: {
+        label: "机甲 - 动作",
+        icon: "🎬",
+        type: "custom",
+        default: "头部天线弹出，双眼点亮，推进器点亮，高速下坠。",
+        options: [
+          { name: "完成姿态", content: "头部天线弹出，双眼点亮，推进器点亮，高速下坠。" },
+          { name: "着陆冲击", content: "单脚跪姿单手撑地着陆，激起滔天巨浪，悬挂压缩回弹。" },
+          { name: "起身屹立", content: "缓缓起身，海水如海啸般冲击机身，巍然矗立。" },
+        ]
+      },
+      creature: {
+        label: "敌对生物",
+        icon: "🐉",
+        type: "custom",
+        default: "体型庞大，散发荧光的海兽，对机甲发出咆哮。",
+        options: [
+          { name: "海兽", content: "体型庞大，散发荧光的海兽，对机甲发出咆哮。" },
+          { name: "外星生物", content: "外星入侵者，多触手，绿色荧光，狰狞可怖。" },
+          { name: "机械怪兽", content: "敌方机甲，红色涂装，武器系统全开。" },
+        ]
+      },
+      camera: {
+        label: "镜头方式",
+        icon: "🎥",
+        type: "custom",
+        default: "手持一镜到底，轻微呼吸感镜头浮动；开场平视近景，后拉跟随，跳机变身时仰拍大全景，机甲落地后环绕过肩拍摄。",
+        options: [
+          { name: "手持一镜到底", content: "手持一镜到底，轻微呼吸感镜头浮动；开场平视近景，后拉跟随，跳机变身时仰拍大全景，机甲落地后环绕过肩拍摄。" },
+          { name: "航拍俯视", content: "航拍俯视，快速推进，展现宏大场景。" },
+          { name: "第一人称", content: "第一人称 POV，沉浸式体验变身过程。" },
+        ]
+      },
+      lighting: {
+        label: "光线环境",
+        icon: "💡",
+        type: "custom",
+        default: "深黑夜晚，光线偏暗，乌云闪电，海雾弥漫。",
+        options: [
+          { name: "夜晚闪电", content: "深黑夜晚，光线偏暗，乌云闪电，海雾弥漫。" },
+          { name: "黄昏逆光", content: "黄昏时分，逆光拍摄，金色轮廓光。" },
+          { name: "霓虹夜景", content: "夜晚城市，霓虹灯光，色彩斑斓。" },
+        ]
+      },
+      style: {
+        label: "风格",
+        icon: "🎨",
+        type: "custom",
+        default: "写实科幻史诗风格，机械感与重量感，好莱坞级视觉特效。",
+        options: [
+          { name: "写实科幻", content: "写实科幻史诗风格，机械感与重量感，好莱坞级视觉特效。" },
+          { name: "赛博朋克", content: "赛博朋克风格，高对比度，霓虹美学。" },
+          { name: "太空歌剧", content: "太空歌剧风格，宏大史诗，华丽视觉。" },
+        ]
+      },
+      quality: {
+        label: "画质",
+        icon: "💎",
+        type: "custom",
+        default: "IMAX 胶片摄影，Panavision C 系列镜头，动态模糊；好莱坞青橙色调，低饱和度，暗部细节保留，胶片颗粒感，轻微柔焦，8K 超细节。",
+        options: [
+          { name: "IMAX 胶片", content: "IMAX 胶片摄影，Panavision C 系列镜头，动态模糊；好莱坞青橙色调，低饱和度，暗部细节保留，胶片颗粒感，轻微柔焦，8K 超细节。" },
+          { name: "数字电影", content: "数字电影质感，ARRI 摄影机，高动态范围。" },
+          { name: "纪录片风格", content: "纪录片手持拍摄，自然光，真实记录感。" },
+        ]
+      },
+      timeline: {
+        label: "时间轴分镜",
+        icon: "📋",
+        type: "custom",
+        default: "帧 1-3（0-4 秒）：穿戴与行走，夜晚未来感飞船船舱内，特勤人员在行走中激活控制器并穿戴虚拟臂铠。帧 4-5（4-6 秒）：跳机，人物跃出船舱，在空中双手展开，0.5s 转体旋转 360 度后保持滑翔姿态。帧 6-8（6-8 秒）：组合，机甲部件有序全息影像扩增变大，精确高速地在人物周围组合成实体机甲。帧 9-11（8-11 秒）：完成，机甲组合完毕，在空中短暂停留并摆出经典的巨型机甲完成姿态，高速下坠准备着陆。帧 12（11-12 秒）：震荡，机甲如陨石般砸向海面，单脚跪姿单手撑地着陆，激起滔天巨浪。帧 13-14（12-14 秒）：昂扬，机甲缓缓起身，海水如海啸般冲击机身，巨大身躯在海浪中巍然矗立。帧 15（14-15 秒）：威胁，机甲正前方远处出现一只体型庞大散发荧光的海兽，对机甲发出咆哮。",
+        options: [
+          { name: "机甲变身原版", content: "帧 1-3（0-4 秒）：穿戴与行走，夜晚未来感飞船船舱内，特勤人员在行走中激活控制器并穿戴虚拟臂铠。帧 4-5（4-6 秒）：跳机，人物跃出船舱，在空中双手展开，0.5s 转体旋转 360 度后保持滑翔姿态。帧 6-8（6-8 秒）：组合，机甲部件有序全息影像扩增变大，精确高速地在人物周围组合成实体机甲。帧 9-11（8-11 秒）：完成，机甲组合完毕，在空中短暂停留并摆出经典的巨型机甲完成姿态，高速下坠准备着陆。帧 12（11-12 秒）：震荡，机甲如陨石般砸向海面，单脚跪姿单手撑地着陆，激起滔天巨浪。帧 13-14（12-14 秒）：昂扬，机甲缓缓起身，海水如海啸般冲击机身，巨大身躯在海浪中巍然矗立。帧 15（14-15 秒）：威胁，机甲正前方远处出现一只体型庞大散发荧光的海兽，对机甲发出咆哮。" },
+          { name: "简化版变身", content: "0-3 秒：激活装备。4-6 秒：跳伞下坠。7-10 秒：机甲组合。11-13 秒：完成变身。14-15 秒：着陆冲击。" },
+          { name: "自定义", content: "" },
+        ]
+      },
+      duration: {
+        label: "视频时长",
+        icon: "⏱️",
+        type: "base",
+        default: "15 秒",
+        options: [
+          { name: "15 秒", content: "15 秒" },
+          { name: "30 秒", content: "30 秒" },
+          { name: "60 秒", content: "60 秒" },
+        ]
+      },
+    },
+  },
 ];
 
 // 默认导出第一个模板

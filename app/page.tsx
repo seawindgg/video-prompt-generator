@@ -63,6 +63,7 @@ export default function Home() {
       protagonist: { words: ['男生', '他'], label: 'protagonist_name' },
       monster: { words: ['骷髅魔', '怪兽', '它'], label: 'monster_name' },
       crowd: { words: ['学生', '他们'], label: 'crowd_name' },
+      mech: { words: ['机甲', '重型机甲', '巨型机甲', '它'], label: 'mech_name' },
     };
 
     // 存储所有替换记录（用于高亮）
