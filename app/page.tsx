@@ -332,8 +332,12 @@ export default function Home() {
               
               {/* 生成的 Prompt */}
               <div 
-                className="bg-slate-900/80 rounded-lg p-4 mb-4 max-h-[600px] overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: highlightedPrompt.replace(/\n/g, '<br/>') || '<span class="text-gray-500">请选择变量以生成 Prompt...</span>' }}
+                className="bg-white/5 rounded-lg p-4 mb-4 max-h-[600px] overflow-y-auto border border-white/10"
+                dangerouslySetInnerHTML={{ __html: highlightedPrompt.replace(/\n/g, '<br/>') || '<span class="text-gray-400">请选择变量以生成 Prompt...</span>' }}
+                style={{ 
+                  color: '#f1f5f9',
+                  textShadow: '0 0 1px rgba(255,255,255,0.1)'
+                }}
               />
               
               {/* 操作按钮 */}
