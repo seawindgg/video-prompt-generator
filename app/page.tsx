@@ -60,7 +60,8 @@ export default function Home() {
 
     // 同义词映射表（包含所有 3 个模板）
     const synonymGroups: Record<string, {words: string[], label: string}> = {
-      protagonist: { words: ['男生', '他'], label: 'protagonist_name' },
+      protagonist: { words: ['男生', '他'], label: 'protagonist_name' },  // 模板 1
+      protagonist_wuxia: { words: ['农夫', '他'], label: 'protagonist_name' },  // 模板 3
       monster: { words: ['骷髅魔', '怪兽', '它'], label: 'monster_name' },
       crowd: { words: ['学生', '他们'], label: 'crowd_name' },
       mech: { words: ['机甲', '重型机甲', '巨型机甲', '它'], label: 'mech_name' },
@@ -81,9 +82,17 @@ export default function Home() {
         // 如果核心词太长，取前 10 个字
         if (coreNewWord.length > 10) coreNewWord = coreNewWord.substring(0, 10);
         
-        // 找到对应的同义词组
+        // 找到对应的同义词组（根据模板和变量名）
         let synonymGroup = null;
-        if (nameVar === 'protagonist_name') synonymGroup = synonymGroups.protagonist;
+        
+        // 模板 3 的 protagonist_name 使用 protagonist_wuxia 同义词组
+        if (selectedTemplate.id === 'wuxia-comedy' && nameVar === 'protagonist_name') {
+          synonymGroup = synonymGroups.protagonist_wuxia;
+        }
+        // 其他模板的 protagonist_name 使用 protagonist 同义词组
+        else if (nameVar === 'protagonist_name') {
+          synonymGroup = synonymGroups.protagonist;
+        }
         else if (nameVar === 'monster_name') synonymGroup = synonymGroups.monster;
         else if (nameVar === 'crowd_name') synonymGroup = synonymGroups.crowd;
         else if (nameVar === 'mech_name') synonymGroup = synonymGroups.mech;
